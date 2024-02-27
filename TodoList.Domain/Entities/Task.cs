@@ -16,6 +16,8 @@ namespace TodoList.Domain.Entities
         public string Description { get; set; } = string.Empty;
         public bool IsCompleted { get; set; } = false;
         public DateTime? Deadline { get; set; }
-
+        public User User { get; set; }
+        public Category Category { get; set; }
+        public Priority Priority { get; set; }
     }
 }

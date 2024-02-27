@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TodoList.Infrastructure;
 
@@ -11,9 +12,11 @@ using TodoList.Infrastructure;
 namespace TodoList.Infrastructure.Migrations
 {
     [DbContext(typeof(TodoDbContext))]
-    partial class TodoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240227151145_UserTaskRelationship")]
+    partial class UserTaskRelationship
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -121,10 +124,6 @@ namespace TodoList.Infrastructure.Migrations
 
                     b.HasKey("TaskId");
 
-                    b.HasIndex("CategoryId");
-
-                    b.HasIndex("PriorityId");
-
                     b.HasIndex("UserId");
 
                     b.ToTable("Tasks");
@@ -181,39 +180,13 @@ namespace TodoList.Infrastructure.Migrations
 
             modelBuilder.Entity("TodoList.Domain.Entities.Task", b =>
                 {
-                    b.HasOne("TodoList.Domain.Entities.Category", "Category")
-                        .WithMany("Tasks")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("TodoList.Domain.Entities.Priority", "Priority")
-                        .WithMany("Tasks")
-                        .HasForeignKey("PriorityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("TodoList.Domain.Entities.User", "User")
                         .WithMany("Tasks")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Category");
-
-                    b.Navigation("Priority");
-
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("TodoList.Domain.Entities.Category", b =>
-                {
-                    b.Navigation("Tasks");
-                });
-
-            modelBuilder.Entity("TodoList.Domain.Entities.Priority", b =>
-                {
-                    b.Navigation("Tasks");
                 });
 
             modelBuilder.Entity("TodoList.Domain.Entities.User", b =>
