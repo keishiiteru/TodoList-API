@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using TodoList.Application.Services;
+using TodoList.Domain.Services;
 using TodoList.Domain.UnitOfWork;
 using TodoList.Infrastructure;
 using TodoList.Infrastructure.UnitOfWork;
@@ -14,6 +16,11 @@ builder.Services.AddSwaggerGen();
 
 //Unit of Work
 builder.Services.AddScoped<ITodoManager, TodoManager>();
+//Services
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IPriorityService, PriorityService>();
+builder.Services.AddScoped<ITaskService, TaskService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<TodoDbContext>(options => options.UseSqlServer(connectionString));
