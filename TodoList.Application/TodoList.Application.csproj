@@ -6,6 +6,14 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.4.0" />
+	</ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\TodoList.Contracts\TodoList.Contracts.csproj" />
     <ProjectReference Include="..\TodoList.Domain\TodoList.Domain.csproj" />

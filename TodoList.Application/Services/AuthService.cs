@@ -1,6 +1,11 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,10 +19,12 @@ namespace TodoList.Application.Services
     public class AuthService : IAuthService
     {
         private readonly ITodoManager _manager;
+        private readonly IConfiguration _configuration;
 
-        public AuthService(ITodoManager manager)
+        public AuthService(ITodoManager manager, IConfiguration configuration)
         {
             _manager = manager;
+            _configuration = configuration;
         }
         public async Task<User> Register(RegisterDto request)
         {
@@ -45,6 +52,26 @@ namespace TodoList.Application.Services
             }
         }
 
+        public async Task<string> Login(LoginDto request)
+        {
+            var user = _manager.UserRepository
+                               .GetQueryable(x => !x.IsDeleted && x.Username == request.Username)
+                               .FirstOrDefault();
+            if (user == null)
+            {
+                return "User not found.";
+            }
+
+            if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
+            {
+                return "Wrong password.";
+            }
+
+            string token = CreateToken(user);
+
+            return token;
+        }
+
         private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
         {
             using (var hmac = new HMACSHA512())
@@ -52,6 +79,43 @@ namespace TodoList.Application.Services
                 passwordSalt = hmac.Key;
                 passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
             }
+        }
+
+        private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
+        {
+            using (var hmac = new HMACSHA512(passwordSalt))
+            {
+                var computeHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                return computeHash.SequenceEqual(passwordHash);
+            }
+        }
+
+        private string CreateToken(User user)
+        {
+            List<Claim> claims = new List<Claim>
+            {
+                new Claim("Username", user.Username),
+                new Claim("UserId", user.UserId.ToString()),
+                new Claim(ClaimTypes.Role, "User"),
+            };
+
+            var tokenKey = _configuration.GetSection("AppSettings:Token").Value;
+            // Pad the key with zeros to ensure it's at least 512 bits
+            var paddedKey = tokenKey.PadRight(64, '0');
+
+            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(paddedKey));
+
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+
+            var token = new JwtSecurityToken(
+                    claims: claims,
+                    expires: DateTime.Now.AddDays(1),
+                    signingCredentials: creds
+                    );
+
+            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+
+            return jwt;
         }
     }
 }

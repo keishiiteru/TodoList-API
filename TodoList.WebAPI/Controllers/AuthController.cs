@@ -30,5 +30,20 @@ namespace TodoList.WebAPI.Controllers
                 throw;
             }
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Login(LoginDto request)
+        {
+            try
+            {
+                var result = await _authService.Login(request);
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
     }
 }
