@@ -54,68 +54,104 @@ namespace TodoList.Application.Services
 
         public async Task<string> Login(LoginDto request)
         {
-            var user = _manager.UserRepository
+            try
+            {
+                var user = _manager.UserRepository
                                .GetQueryable(x => !x.IsDeleted && x.Username == request.Username)
                                .FirstOrDefault();
-            if (user == null)
-            {
-                return "User not found.";
+                if (user == null)
+                {
+                    return "User not found.";
+                }
+
+                if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
+                {
+                    return "Wrong password.";
+                }
+
+                string token = CreateToken(user);
+
+                return token;
             }
-
-            if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
+            catch (Exception)
             {
-                return "Wrong password.";
+
+                throw;
             }
-
-            string token = CreateToken(user);
-
-            return token;
+            
         }
 
         private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
         {
-            using (var hmac = new HMACSHA512())
+            try
             {
-                passwordSalt = hmac.Key;
-                passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                using (var hmac = new HMACSHA512())
+                {
+                    passwordSalt = hmac.Key;
+                    passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                }
             }
+            catch (Exception)
+            {
+
+                throw;
+            }
+            
         }
 
         private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
         {
-            using (var hmac = new HMACSHA512(passwordSalt))
+            try
             {
-                var computeHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-                return computeHash.SequenceEqual(passwordHash);
+                using (var hmac = new HMACSHA512(passwordSalt))
+                {
+                    var computeHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                    return computeHash.SequenceEqual(passwordHash);
+                }
             }
+            catch (Exception)
+            {
+
+                throw;
+            }
+            
         }
 
         private string CreateToken(User user)
         {
-            List<Claim> claims = new List<Claim>
+            try
+            {
+                List<Claim> claims = new List<Claim>
             {
                 new Claim("Username", user.Username),
                 new Claim("UserId", user.UserId.ToString()),
                 new Claim(ClaimTypes.Role, "User"),
             };
 
-            var tokenKey = _configuration.GetSection("AppSettings:Token").Value;
-            // Pad the key with zeros to ensure it's at least 512 bits
-            var paddedKey = tokenKey.PadRight(64, '0');
+                var tokenKey = _configuration.GetSection("AppSettings:Token").Value;
+                // Pad the key with zeros to ensure it's at least 512 bits
+                var paddedKey = tokenKey.PadRight(64, '0');
 
-            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(paddedKey));
+                var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(paddedKey));
 
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
-            var token = new JwtSecurityToken(
-                    claims: claims,
-                    expires: DateTime.Now.AddDays(1),
-                    signingCredentials: creds
-                    );
+                var token = new JwtSecurityToken(
+                        claims: claims,
+                        expires: DateTime.Now.AddDays(1),
+                        signingCredentials: creds
+                        );
 
-            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+                var jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
-            return jwt;
+                return jwt;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+            
         }
     }
 }
