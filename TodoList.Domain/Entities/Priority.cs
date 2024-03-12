@@ -10,6 +10,6 @@ namespace TodoList.Domain.Entities
     {
         public int PriorityId { get; set; }
         public string Name { get; set; } = string.Empty;
-        public List<Task> Tasks { get; set; }
+        public virtual List<Task> Tasks { get; set; }
     }
 }

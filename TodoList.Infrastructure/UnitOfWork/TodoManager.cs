@@ -1,11 +1,14 @@
-﻿using System;
+﻿using EFCore.BulkExtensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
 using TodoList.Domain.Entities;
 using TodoList.Domain.Repositories;
 using TodoList.Domain.UnitOfWork;
+using TodoList.Infrastructure.Configuration;
 using TodoList.Infrastructure.Repositories;
 using Task = TodoList.Domain.Entities.Task;
 
@@ -23,6 +26,35 @@ namespace TodoList.Infrastructure.UnitOfWork
         public TodoManager(TodoDbContext context) 
         {
             _context = context;
+        }
+
+        public void DataConfiguration()
+        {
+            var todoConfig = new TodoConfiguration();
+
+            var priority = PriorityRepository.GetQueryable();
+            var newPriorities = new List<Priority>();
+            var currentPriorities = todoConfig.GetPriorities();
+
+            newPriorities = currentPriorities.Where(x => !priority.Any(y =>
+                                                    y.IsDeleted == x.IsDeleted &&
+                                                    y.PriorityId == x.PriorityId &&
+                                                    y.Name == x.Name))
+                                             .ToList();
+
+            if (newPriorities.Any())
+            {
+                using (var transacDb = _context.Database.BeginTransaction())
+                {
+                    _context.BulkInsertAsync(newPriorities,
+                             new BulkConfig
+                             {
+                                 SetOutputIdentity = false,
+                                 BatchSize = 10000
+                             });
+                    transacDb.Commit();
+                }
+            }
         }
 
         public IGenericRepository<Category> CategoryRepository

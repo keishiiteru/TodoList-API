@@ -13,6 +13,7 @@ namespace TodoList.Domain.UnitOfWork
 {
     public interface ITodoManager : IDisposable
     {
+        void DataConfiguration();
         IGenericRepository<Category> CategoryRepository { get; }
         IGenericRepository<Priority> PriorityRepository { get; }
         IGenericRepository<Task> TaskRepository { get; }
