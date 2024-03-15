@@ -23,9 +23,12 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<ITodoManager, TodoManager>();
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IPriorityService, PriorityService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
+
+builder.Services.AddHttpContextAccessor();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<TodoDbContext>(options => options.UseSqlServer(connectionString));
