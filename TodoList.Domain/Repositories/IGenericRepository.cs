@@ -12,6 +12,9 @@ namespace TodoList.Domain.Repositories
         IQueryable<T> GetQueryable(
        Expression<Func<T, bool>> filter = null,
        string includeProperties = "");
+        IQueryable<T> GetQueryableWithInclude(
+        Expression<Func<T, bool>> predicate, 
+        params Expression<Func<T, object>>[] includes);
         T GetById(object id);
         void Insert(T obj);
         void Update(T obj);

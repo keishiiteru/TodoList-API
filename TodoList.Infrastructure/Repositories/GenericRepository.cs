@@ -41,6 +41,19 @@ namespace TodoList.Infrastructure.Repositories
             return query;
         }
 
+        public IQueryable<TEntity> GetQueryableWithInclude(Expression<Func<TEntity, bool>> predicate, params Expression<Func<TEntity, object>>[] includes)
+        {
+
+            IQueryable<TEntity> query = _table.Where(predicate);
+
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+
+            return query;
+        }
+
         public virtual TEntity GetById(object id)
         {
             return _table.Find(id);
